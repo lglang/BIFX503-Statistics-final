@@ -1,0 +1,248 @@
+---
+title: "Final_BIFX503"
+author: Lindsay Glang
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+gapminder <- read.csv("gapminder_indicators_2015.csv")
+```
+
+## Intro
+The Gapminder Foundation collects data on economic and health indicators to encourage use and understanding of statistics, and promote sustainable global development. The dataset gapminder_indicators_2015.csv contains variables from their 2015 data, including GPD per capita, life expectancy, total population, fertility rate (children per woman), crude birth rate (births per 1000 population), and under 5 mortality (per 1000 born).
+
+
+## Question 1
+Subset the data so that it contains only complete records (i.e., all records with any missing data are removed).  What is one disadvantage of limiting your analysis to only complete data records?
+```{r}
+#Subset data to complete records
+gap_complete <- gapminder %>% drop_na()
+```
+
+*One disadvantage of limiting analysis to only complete data records is that the results may be biased - the data may be unbiased if the data are missing completely at rancom (MCAR) but otherwise the generalizability is compromised. *
+
+## Question 2
+Using graphical methods, assess the normality of the six continuous variables in the dataset.  In a few words, describe the distribution of each variable.
+
+* Continuous Variables:
+  * GDP_per_capita: Heavy right skew. QQ plot is not straight, boardering on exponential rise.
+  * Life_expectancy: Left skewed, not extreme. QQ plot flattens towards the ends.
+  * Total Population: Extremely heavy right skew. QQ plot is almost entirely flat, rising at the end.
+  * Fertility Rate: Right skew. QQ plot is more normal towards the higher values.
+  * Birth Rate: Right skew, less heavy that others. QQ plot again more normal at higher values.
+  * Under 5 Mortality: Heavy Right skew. QQ plot rises exponentially.
+  
+
+```{r}
+# Assess normality of: GDPpercap, life exp,
+#total pop, fertility rate, birth rate, and under 5 mortality
+
+#Normality of GDPpercap
+hist(gap_complete$GDP_per_capita)
+qqnorm(gap_complete$GDP_per_capita, main = "Normal QQ plot for GDP Per Capita")
+qqline(gap_complete$GDP_per_capita)
+
+#Normality of LifeExp
+hist(gap_complete$Life_expectancy)
+qqnorm(gap_complete$Life_expectancy, main = "Normal QQ plot for Life Expectancy")
+qqline(gap_complete$Life_expectancy)
+
+#Normality of total pop
+hist(gap_complete$Total_population)
+qqnorm(gap_complete$Total_population, main = "Normal QQ plot for Total Population")
+qqline(gap_complete$Total_population)
+
+#Normality of fertility rate
+hist(gap_complete$Fertility_rate)
+qqnorm(gap_complete$Fertility_rate, main = "Normal QQ plot for Fertility Rate")
+qqline(gap_complete$Fertility_rate)
+
+#Normality of birth rate
+hist(gap_complete$Crude_birth_rate)
+qqnorm(gap_complete$Crude_birth_rate, main = "Normal QQ plot for Crude Birth Rate")
+qqline(gap_complete$Crude_birth_rate)
+
+#Normality of under 5 mortality
+hist(gap_complete$Under_five_mortality)
+qqnorm(gap_complete$Under_five_mortality, main = "Normal QQ plot for Under Five Mortality")
+qqline(gap_complete$Under_five_mortality)
+```
+
+## Question 3
+For the skewed distributions, choose a transformation that will normalize them, and regenerate the plots for the transformed variables.
+Note: to save time, don’t try multiple transformations.  Just choose one reasonable one, and go with it, even if it doesn’t completely correct the skewness.
+
+* Tranformations:
+  * GDP Per Capita - log10
+  * Life Expectancy - Natural Log
+  * Total Population - Log 10
+  * Fertility Rate - Natural Log
+  * Birth Rate - Log 10
+  * Under 5 Mortality - Log 10
+  
+*Many of these are not perfect transformations, particularly life expectancy. Ideally other transformations would be applied*
+```{r}
+# Fix skew in: GDPpercap, life exp,total pop, fertility rate, 
+#birth rate, and under 5 mortality
+
+#transformation of GDPpercap
+gap_GDP <- gap_complete %>% select(GDP_per_capita) %>% log10()
+hist(gap_GDP$GDP_per_capita)
+qqnorm(gap_GDP$GDP_per_capita, main = "Log10 QQ plot for GDP Per Capita")
+qqline(gap_GDP$GDP_per_capita)
+
+#Transformation of LifeExp
+gap_life <- gap_complete %>% select(Life_expectancy) %>% log()
+hist(gap_life$Life_expectancy)
+qqnorm(gap_life$Life_expectancy, main = "Natural Log QQ plot for Life Expectancy")
+qqline(gap_life$Life_expectancy)
+
+#Normality of total pop
+gap_pop <- gap_complete %>% select(Total_population) %>% log10()
+hist(gap_pop$Total_population)
+qqnorm(gap_pop$Total_population, main = "Log10 QQ plot for Total Population")
+qqline(gap_pop$Total_population)
+
+#Normality of fertility rate
+gap_fert <- gap_complete %>% select(Fertility_rate) %>% log()
+hist(gap_fert$Fertility_rate)
+qqnorm(gap_fert$Fertility_rate, main = "Natural log QQ plot for Fertility Rate")
+qqline(gap_fert$Fertility_rate)
+
+#Normality of birth rate
+gap_birth <- gap_complete %>% select(Crude_birth_rate) %>% log10()
+hist(gap_birth$Crude_birth_rate)
+qqnorm(gap_birth$Crude_birth_rate, main = "Log10 QQ plot for Crude Birth Rate")
+qqline(gap_birth$Crude_birth_rate)
+
+#Normality of under 5 mortality
+gap_five <- gap_complete %>% select(Under_five_mortality) %>% log10()
+hist(gap_five$Under_five_mortality)
+qqnorm(gap_five$Under_five_mortality, main = "Log10 QQ plot for Under Five Mortality")
+qqline(gap_five$Under_five_mortality)
+```
+
+## Question 4
+Subset the data to include just the continuous variables.  If a transformation was used to normalize the distribution, include the transformed variable in place of the original variable.  Note: Your resulting dataset should contain six variables.
+```{r}
+gap_transform <- gap_complete %>% select(GDP_per_capita,Life_expectancy,                                         Total_population,Fertility_rate,Crude_birth_rate,Under_five_mortality) %>%
+  mutate(GDP_per_capita = log10(GDP_per_capita),
+                                Life_expectancy = log(Life_expectancy),
+                                Total_population = log10(Total_population),
+                                Fertility_rate = log(Fertility_rate),
+                                Crude_birth_rate = log10(Crude_birth_rate),
+                                Under_five_mortality = log10(Under_five_mortality))
+
+```
+
+## Question 5
+Scale the six variables from step 4, generate a correlation matrix, and evaluate the correlations.  Which variables are positively associated?  Negatively associated?  Are any variables not associated with any other variables?
+Note: You are not concerned with statistical significance, just the size of correlation.  Assume any correlation of at least 0.5 is a meaningful association.
+
+* Correlation Evaluation
+  * Positive Associations: 
+    * GDP Per capita and Life Expectancy 
+    * Birth Rate and Fertility rate
+    * Under five mortality and fertility rate
+    * Under five mortality and birth rate
+  * Negative association:
+    * GDP Per capita and Fertility rate
+    * GDP and Birth rate
+    * GDP and under 5 mortality
+    * Life expectancy and fertility
+    * Life expectancy and birth rate
+    * life expectancy and under 5 mortality
+  * No associations:
+    * Total population is not meaningfully associated with any other variable.
+```{r}
+gap_scale <- scale(gap_transform)
+cor(gap_scale)
+```
+
+
+## Question 6
+Perform k means clustering, specifying 5 clusters, and generate a table that shows how cluster assignment is associated with geographic region (there are 5 regions).  What is your impression of how well cluster assignment identifies region?
+
+*The cluster assignment identified region fairly well, especially looking at the p-value for chi squared test (P < 2.2e-16). Most regions fell largely into one cluster or another.* 
+
+```{r}
+# Generate kmeans table
+gap_kmeans <- kmeans(gap_scale, centers = 5)
+gap_kmeans$cluster
+
+#Cross-tabulate with original data
+gap_clusters <- cbind(gap_complete, gap_kmeans$cluster)
+gap_clusters$Clusters <- gap_kmeans$cluster
+gap_table <- table(gap_clusters$Region, gap_clusters$Clusters)
+gap_table
+
+#Chi squared for association
+chisq.test(gap_table)
+```
+
+## Question 7
+Fit a multiple linear regression model that has life expectancy as the dependent variable, and the other continuous variables as independent variables.  Use an iterative model fitting procedure, and the principle of parsimony.  What is your final model, and what does it tell you about predictors of life expectancy?
+Note: Include a numeric interpretation of each regression coefficient, i.e. quantify how each variable impacts life expectancy.
+
+*Assumption made to use complete data, with NAs removed. Total population was the only non-significant variable, however, birth rate and fertility rate are highly correlated (0.95) so it makes sense to drop one of those. When fertility rate is dropped and birth rate included, the p value of birth rate is more significant than when birth rate is dropped and fertility rate included (p = 0.197 vs 0.0023) so to simplify, we should drop fertility rate. Thus the final model is: lm(Life_expectancy~GDP_per_capita+Crude_birth_rate+Under_five_mortality, gap_complete)*
+
+*GDP_per_capita - p = 5.0e-8*
+
+*Crude_Birth_Rate = p = 0.00299*
+
+*Under_Five_mortality - p = 2.1e-15*
+
+*Therefore, the most significant predictors of life expectancy are GDP per capita, crude birth rate, and under five mortality.* 
+
+```{r}
+#Continuous variables: GDPpercap, life exp,total pop, fertility rate, 
+#birth rate, and under 5 mortality
+
+#Quick summaries of each variable for significance for order to enter
+summary(lm(Life_expectancy~GDP_per_capita, gap_complete)) #p< 2.2e-16
+summary(lm(Life_expectancy~Total_population, gap_complete)) #P = 0.83
+summary(lm(Life_expectancy~Fertility_rate, gap_complete)) # P<2.2e-16
+summary(lm(Life_expectancy~Crude_birth_rate, gap_complete)) #P<2.2e-16
+summary(lm(Life_expectancy~Under_five_mortality, gap_complete)) #P< 2.2e-16
+
+mod1 <- lm(Life_expectancy~GDP_per_capita, gap_complete) #GDP is significant
+summary(mod1)
+mod2 <- lm(Life_expectancy~GDP_per_capita+Total_population, gap_complete)
+summary(mod2)
+anova(mod1, mod2) # Total population not significant, do not include
+mod3 <- lm(Life_expectancy~GDP_per_capita+Fertility_rate, gap_complete)
+summary(mod3)
+anova(mod1, mod3) #Significant, include Fertility rate
+mod4 <- lm(Life_expectancy~GDP_per_capita+Fertility_rate+Crude_birth_rate, gap_complete)
+summary(mod4)
+anova(mod3,mod4) #Significant, include birth rate
+mod5 <- lm(Life_expectancy~GDP_per_capita+Fertility_rate+Crude_birth_rate+Under_five_mortality, gap_complete)
+summary(mod5)
+anova(mod4,mod5) #Significant, include under 5 mortality
+#Drop birth or fertility rate b/c correlation
+mod6 <- lm(Life_expectancy~GDP_per_capita+Crude_birth_rate+Under_five_mortality, gap_complete)
+summary(mod6) #Final model
+mod7 <- lm(Life_expectancy~GDP_per_capita+Fertility_rate+Under_five_mortality, gap_complete)
+summary(mod7) # Less significant than mod6
+```
+
+## Question 8
+Name a situation in which recursive partitioning would be a better model choice than linear regression.
+
+*One assumption of a linear regression model is that there is linear relationship between the dependent (Y) and independent (X) variable. Recursive partitioning does not make that assumption, and so would be more useful for data where there isn't a linear X and Y relationship.*
+
+## Question 9
+List two ways in which the Bayesian approach to statistical analysis differs from the Frequentist approach.
+
+* *The Frequentist approach includes fixed, unknowable parameters. The Bayesian parameters are not fixed but variable, described by probabilities.*
+* *The Frequentist approach cannot prove the null hypothesis, only reject the alternative, while the Bayesian approach allows for quantifiable evidence in favor of both the null and alternative hypothesis.*
+
+## Question 10
+What is the difference between a fixed effect and a random effect?  How could use of random effects improve the fit of a repeated measures regression model?
+
+*Fixed effects have the levels in the study represent all levels of interest, and allow for inference about an entire population. Random effects are where the levels of the independent variable are a random sample of all possible levels, and allow for inferences about individuals. The inclusion of random effects may allow for enhanced model realism, which would improve the repeated measures model.*
